@@ -3,3 +3,13 @@ sourcetype=epo* event_description="File infected.  Undetermined clean error, del
 | bucket _time span=1d
 | stats  values(detected_timestamp) as TimeStamp, values(event_description) as Event_Desc, values(category) as Category, values(severity) as Severity, values(signature) as Signature, values(threat_type) as ThreatType, values(file_name) as InfectedFile, values(logon_user) as UserName, count(file_name) as Total_files by dest_nt_host  
 | where  Total_files >=3  | sort  - TimeStamp
+
+## Multiple detection found on the single host
+sourcetype=epo category="av.detect" OR category="av.pup" 
+| bucket detected_time span=24h
+| search signature!="EICAR test file"
+| search severity=major OR severity=high OR severity=critical
+| search NOT (((file_name="*\\AppData\\Local\\Google\\Chrome\\User Data\\*" OR file_name="*\\AppData\\Local\\Microsoft\\Windows\\Temporary Internet Files\\*" OR file_name="*\\AppData\\Local\\Microsoft\\Windows\\INetCache\\*" OR file_name="*\\AppData\\Local\\Mozilla\\Firefox\\Profiles\\*" OR file_name!="*\\AppData\Local\\Packages\\Microsoft.MicrosoftEdge*"))
+| stats values(detected_timestamp) as TimeStamp, values(action) as Action, values(category) as Category, values(severity) as Severity, values(signature) as Signature, values(threat_type) as ThreatType, values(file_name) as InfectedFile, values(file_hash) as FileMD5, values(logon_user) as UserName, count(file_name) as Total_files by dest_nt_host
+| where Total_files >=3
+| sort - TimeStamp
